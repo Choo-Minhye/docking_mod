@@ -230,11 +230,7 @@ class jamesDocking(object):
                 self._dockingfb.sequence = "Successfully docked!"
                 self._dockServer.publish_feedback(self._dockingfb)
                 self._dockServer.set_succeeded(self._result)
-<<<<<<< HEAD
         
-=======
-                
->>>>>>> 99f691d84a8dc601afecd54d09f175039125d6e5
             rate.sleep()
             
 
@@ -260,12 +256,6 @@ class jamesDocking(object):
 
 if __name__ == '__main__':
     rospy.init_node('james_docking')
-<<<<<<< HEAD
     rate = rospy.Rate(3000)
     jamesDocking()
-=======
-    rate = rospy.Rate(2000)
-    jamesDocking()
-
->>>>>>> 99f691d84a8dc601afecd54d09f175039125d6e5
     # rospy.spin()
