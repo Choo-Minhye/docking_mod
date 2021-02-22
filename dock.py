@@ -5,7 +5,6 @@ import actionlib
 from std_msgs.msg import Byte, Bool, Int16
 from geometry_msgs.msg import Twist
 from james_docking.msg import dockAction, dockFeedback, dockResult, sensor_state
-# from kobuki_msgs.msg import BumperEvent
 import time
 class jamesDocking(object):
 
@@ -19,10 +18,8 @@ class jamesDocking(object):
         self._irState = sensor_state()
         self._velocity = Twist()
         self._dockState = Byte()
-        # self._bumperState = BumperEvent()
         self._bumperState = Bool()
         self._irSubscriber = rospy.Subscriber('/dockdata_T', Int16, self.cb_getIR)
-        # self._bumperSubscriber = rospy.Subscriber('/mobile_base/events/bumper', BumperEvent, self.cb_getBUMPER)
         self._bumperSubscriber = rospy.Subscriber('/bumper_state', Bool, self.cb_getBUMPER)
 
         # initialize velocity
@@ -49,9 +46,7 @@ class jamesDocking(object):
 
             if self._dockServer.is_preempt_requested():
                 rospy.loginfo('The goal has been cancelled/preempted')
-                # self._velocity.linear.x = 0
                 self._linear_vel(0)
-                # self._velocity.angular.z = 0
                 self._angular_vel_ck(0)
                 self._velPublisher.publish(self._velocity)
                 self._dockServer.set_preempted()
@@ -63,20 +58,16 @@ class jamesDocking(object):
                 self._dockServer.publish_feedback(self._dockingfb)
                 
                 if int(bin(self.dockdata & 0b001001000), 2) >= 0b000001000 :
-                    # self._velocity.angular.z = 0.15
                     self._angular_vel_ck(1.5)
                 
                 else:
-                    # self._velocity.angular.z = -0.15            
                     self._angular_vel_ack(1.5)
                 
                 self._dockState = 1
 
             elif self._dockState == 1:
-                # self._velPublisher.publish(self._velocity)
               
                 if int(bin(self.dockdata & 0b101111101), 2) >= 0b000000001 :          
-                    # self._velocity.angular.z = 0
                     self._angular_vel_ck(0)
                     self._velPublisher.publish(self._velocity)
                     self._dockingfb.sequence = 'IR transmitter found!...'
@@ -94,7 +85,6 @@ class jamesDocking(object):
                 if int(bin(self.dockdata & 0b000111000), 2) >= 0b000001000 :
                     self._dockingfb.sequence = 'Center line found...'
                     self._dockServer.publish_feedback(self._dockingfb)                         
-                    # self._velocity.linear.x = 0
                     self._linear_vel(0)
                     self._velPublisher.publish(self._velocity)
                     self._dockState = 5
@@ -102,7 +92,6 @@ class jamesDocking(object):
                 elif int(bin(self.dockdata & 0b111000000), 2) >= 0b001000000 :
                         self._dockingfb.sequence = 'Rotating to the center line...'
                         self._dockServer.publish_feedback(self._dockingfb)                         
-                        # self._velocity.linear.x = 0
                         self._linear_vel(0)
                         self._velPublisher.publish(self._velocity)
                         self._dockState = 3
@@ -110,22 +99,17 @@ class jamesDocking(object):
                 elif int(bin(self.dockdata & 0b000000111), 2) >= 0b000000010 :
                         self._dockingfb.sequence = 'Rotating to the center line...'
                         self._dockServer.publish_feedback(self._dockingfb)                         
-                        # self._velocity.linear.x = 0              
                         self._linear_vel(0)
                         self._velPublisher.publish(self._velocity)
                         self._dockState = 4
 
-                # self._velocity.linear.x = -0.05
                 self._linear_vel(1)
                 self._angular_vel_ck(0)
-                # self._velocity.angular.z = 0
                 self._velPublisher.publish(self._velocity)
 
             elif self._dockState == 3:
-                # self._velocity.linear.x = 0
                 self._linear_vel(0)
                 self._angular_vel_ck(3)
-                # self._velocity.angular.z = 0.3
                 self._velPublisher.publish(self._velocity)
                 
                 if int(bin(self.dockdata & 0b000111001), 2) >= 0b000000001 :
@@ -135,9 +119,7 @@ class jamesDocking(object):
                     
             elif self._dockState == 4:
                 self._linear_vel(0)
-                # self._velocity.linear.x = 0
                 self._angular_vel_ack(3)
-                # self._velocity.angular.z = -0.3
                 self._velPublisher.publish(self._velocity)
                 
                 if int(bin(self.dockdata & 0b100111000), 2) >= 0b000001000 :
@@ -154,15 +136,12 @@ class jamesDocking(object):
 
             elif self._dockState == 6:
                 if (self._bumperState.data == 1):
-                # if (self._bumperState.bumper == 1) and (self._bumperState.state == 1):
                     self._velocity.linear.x = 0
                     self._linear_vel(0)
-                    # self._velocity.angular.z = 0
                     self._angular_vel_ck(0)
                     self._success = True
 
                 if int(bin(self.dockdata & 0b000010000), 2) == 0b000010000 : #   ~|~|~  ~|C|~  ~|~|~
-                    # self._velocity.linear.x = -0.05 # -0.045 #0.07
                     self._linear_vel(1)
                     self.angular_z = 0
                     if int(bin(self.dockdata & 0b000100000), 2) == 0b000100000 : #   ~|~|~  L|C|~  ~|~|~
@@ -173,7 +152,6 @@ class jamesDocking(object):
                     self._velocity.angular.z = self.angular_z
 
                 elif int(bin(self.dockdata & 0b10000001), 2) >= 0b000000001 : #   L|~|~  ~|~|~  ~|~|R
-                    # self._velocity.linear.x = -0.05 # -0.025
                     self._linear_vel(1)
                     self.angular__z = 0
 
@@ -187,41 +165,29 @@ class jamesDocking(object):
 
 
                 elif int(bin(self.dockdata & 0b000100000), 2) >= 0b000000001 : #   ~|~|~  L|~|~  ~|~|~
-                    # self._velocity.linear.x = -0.05 # -0.025
                     self._linear_vel(1)
-                    # self._velocity.angular.z = -0.1
                     self._angular_vel_ack(1)
 
                 elif int(bin(self.dockdata & 0b000001000), 2) >= 0b000001000 : #   ~|~|~  ~|~|R  ~|~|~
-                    # self._velocity.linear.x = -0.05 # -0.025
                     self._linear_vel(1)
-                    # self._velocity.angular.z = 0.1
                     self._angular_vel_ck(1)
 
                 elif int(bin(self.dockdata & 0b001000000), 2) >= 0b001000000 : #   ~|~|R  ~|~|~  ~|~|~
-                    # self._velocity.linear.x = -0.05
                     self._linear_vel(1)
-                    # self._velocity.angular.z = 0.25
                     self._angular_vel_ck(2)
 
                 elif int(bin(self.dockdata & 0b000000100), 2) >= 0b000000100 : #   ~|~|~  ~|~|~  L|~|~
-                    # self._velocity.linear.x = -0.05
                     self._linear_vel(1)
-                    # self._velocity.angular.z = -0.25
                     self._angular_vel_ack(2)
 
                 else :
-                    # self._velocity.linear.x = -0.05 #0.03
                     self._linear_vel(1)
-                    # self._velocity.angular.z = 0
                     self._angular_vel_ck(0)
 
                 self._velPublisher.publish(self._velocity)
 
             if self._success == True:
-                # self._velocity.linear.x = 0
                 self._linear_vel(0)
-                # self._velocity.angular.z = 0
                 self._angular_vel_ck(0)
 
                 self._velPublisher.publish(self._velocity)
@@ -258,4 +224,3 @@ if __name__ == '__main__':
     rospy.init_node('james_docking')
     rate = rospy.Rate(3000)
     jamesDocking()
-    # rospy.spin()
